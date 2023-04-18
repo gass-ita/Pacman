@@ -5,6 +5,8 @@ import Utils.Debugger;
 
 public class Entity {
 
+
+
     public static final int DIRECTION_UP = 0;
     public static final int DIRECTION_DOWN = 1;
     public static final int DIRECTION_LEFT = 2;
@@ -32,7 +34,7 @@ public class Entity {
     public Entity(Cell[][] board, int x, int y) {
         this.board = board;
 
-        Cell cell = this.board[x][y];
+        Cell cell = this.board[y][x];
         if (cell instanceof Map.Path) {
             ((Map.Path) cell).setEntity(this);
             this.x = x;
@@ -72,12 +74,12 @@ public class Entity {
                     throw new IllegalArgumentException("Invalid direction");
             }
 
-            Cell newCell = this.board[newX][newY];
+            Cell newCell = this.board[newY][newX];
             if (newCell instanceof Map.Path) {
                 Map.Path newPath = (Map.Path) newCell;
                 if (newPath.getEntity() == null) {
                     newPath.setEntity(this);
-                    this.board[this.x][this.y] = new Map.Path();
+                    this.board[this.y][this.x] = new Map.Path();
                     this.x = newX;
                     this.y = newY;
                 }

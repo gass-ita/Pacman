@@ -2,7 +2,7 @@ package src;
 
 
 import java.util.ArrayList;
-
+import java.awt.Component;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
@@ -12,15 +12,21 @@ import Entities.Pacman;
 import Map.Cell;
 import Map.Path;
 import Map.Wall;
+import Utils.Debugger;
 
 public class Gameboard implements KeyListener {
+    public static final int WALL = 0;
+    public static final int PATH = 1;
+    public static final int ENTITY = 2;
+    
 
     /* default variables */
     private final int DEFAULT_WIDTH = 10;
     private final int DEFAULT_HEIGHT = 10;
-    private final Cell[][] DEFAULT_BOARD = new Cell[DEFAULT_WIDTH][DEFAULT_HEIGHT];
+    private final Cell[][] DEFAULT_BOARD = new Cell[DEFAULT_HEIGHT][DEFAULT_WIDTH];
 
     private Cell[][] board;
+    private int[][] boardInt;
     private int width;
     private int height;
 
@@ -33,23 +39,29 @@ public class Gameboard implements KeyListener {
         this.width = DEFAULT_WIDTH;
         this.height = DEFAULT_HEIGHT;
 
-        for(int i = 1; i < this.width - 1; i++){
-            for(int j = 1; j < this.height - 1; j++){
+        this.boardInt = new int[this.height][this.width];
+
+        //fill with paths
+        for(int i = 0; i < this.height; i++){
+            for(int j = 0; j < this.width; j++){
                 this.board[i][j] = new Path();
             }
         }
 
-        for(int i = 0; i < this.width; i++){
+        //surround with walls
+        for(int i = 0; i < this.height; i++){
             this.board[i][0] = new Wall();
-            this.board[i][this.height - 1] = new Wall();
+            this.board[i][this.width - 1] = new Wall();
+        }
+        for(int i = 0; i < this.width; i++){
+            this.board[0][i] = new Wall();
+            this.board[this.height - 1][i] = new Wall();
         }
 
-        for(int i = 0; i < this.height; i++){
-            this.board[0][i] = new Wall();
-            this.board[this.width - 1][i] = new Wall();
-        }
         
-        new TestFrame(this);
+
+        
+        updateBoardInt();
 
     }
 
@@ -57,10 +69,12 @@ public class Gameboard implements KeyListener {
         for(Entity entity : this.entities){
             entity.step();
         }
+        updateBoardInt();
     }
 
     public void addEntity(Entity entity){
         this.entities.add(entity);
+        this.boardInt[entity.getY()][entity.getX()] = Gameboard.ENTITY;
     }
 
     public void createEntity(int x, int y){
@@ -80,12 +94,33 @@ public class Gameboard implements KeyListener {
         String output = "";
         for(int i = 0; i < this.height; i++){
             for(int j = 0; j < this.width; j++){
-                output += this.board[j][i].toString();
+                output += this.board[i][j].toString();
             }
             output += "\n";
         }
         return output;
     }
+
+    public void updateBoardInt(){
+        for(int i = 0; i < this.height; i++){
+            for(int j = 0; j < this.width; j++){
+                if(this.board[i][j] instanceof Wall){
+                    this.boardInt[i][j] = Gameboard.WALL;
+                }else if(this.board[i][j] instanceof Path){
+                    if (((Path) this.board[i][j]).getEntity() != null)
+                        this.boardInt[i][j] = Gameboard.ENTITY;
+                    else
+                        this.boardInt[i][j] = Gameboard.PATH;
+                }
+            }
+        }
+    }
+
+    public int[][] getBoardInt(){
+        return this.boardInt;
+    }
+    
+
 
     @Override
     public void keyTyped(KeyEvent e) {
@@ -94,6 +129,8 @@ public class Gameboard implements KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
+
+        Debugger.log("Key pressed: " + e.getKeyCode() + " " + e.getKeyChar());
         
         switch(e.getKeyCode()){
             case KeyEvent.VK_UP:
@@ -115,6 +152,10 @@ public class Gameboard implements KeyListener {
     @Override
     public void keyReleased(KeyEvent e) {
         //throw new UnsupportedOperationException("Unimplemented method 'keyReleased'");
+    }
+
+    public Pacman getPacman() {
+        return this.pacman;
     }
 
 
